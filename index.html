@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ondrej's Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0c;
+  --s1:#141414;
+  --s2:#1c1c1c;
+  --border:#252525;
+  --text:#f0ede8;
+  --muted:#666;
+  --muted2:#444;
+  --chest:#4a8fe8;
+  --triceps:#e05c3a;
+  --shoulder:#4caf7d;
+  --lats:#f5c842;
+  --core:#b06ef3;
+  --rest:#2a2a2a;
+  --accent:#f0ede8;
+  --done:#1a2e1a;
+  --done-border:#2d5a2d;
+}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:40px}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100}
+.nav-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--accent)}
+.nav-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.nav-right{text-align:right}
+.progress-ring{width:44px;height:44px}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:11px 16px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.done-tab{color:var(--shoulder)}
+
+/* WEEK VIEW */
+.week-view{display:none;padding:0}
+.week-view.active{display:block}
+
+.week-header-bar{padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.week-phase{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:0.08em;margin-bottom:4px}
+.week-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1}
+.week-desc{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+/* DAY CARDS */
+.day-card{margin:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--s1);overflow:hidden;transition:border-color 0.2s}
+.day-card.completed{background:var(--done);border-color:var(--done-border)}
+.day-top{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer}
+.day-check{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--muted2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;cursor:pointer}
+.day-check.checked{background:#2d5a2d;border-color:#4caf7d}
+.day-check svg{opacity:0;transition:opacity 0.2s}
+.day-check.checked svg{opacity:1}
+.day-label-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:38px}
+.day-summary{flex:1;font-size:13px;font-weight:500;line-height:1.3}
+.day-expand{color:var(--muted);font-size:14px;transition:transform 0.2s;margin-left:4px}
+.day-expand.open{transform:rotate(180deg)}
+
+.day-body{display:none;padding:0 14px 14px}
+.day-body.open{display:block}
+
+.exercises{margin-bottom:12px}
+.ex-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.ex-row:last-child{border-bottom:none}
+.muscle-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.ex-info{flex:1}
+.ex-name{font-size:13px;font-weight:500;line-height:1.3}
+.ex-detail{font-size:11px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* NOTES */
+.notes-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;text-transform:uppercase}
+.notes-area{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px;resize:none;min-height:72px;outline:none;transition:border-color 0.2s}
+.notes-area:focus{border-color:var(--muted)}
+.notes-area::placeholder{color:var(--muted2)}
+.save-btn{margin-top:8px;width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:8px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em}
+.save-btn:active{background:var(--border);color:var(--text)}
+.saved-flash{color:var(--shoulder);font-size:11px;font-family:'DM Mono',monospace;text-align:center;margin-top:6px;opacity:0;transition:opacity 0.3s}
+.saved-flash.show{opacity:1}
+
+/* REST DAY */
+.rest-day{margin:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--s1);padding:16px 14px;display:flex;align-items:center;gap:10px}
+.rest-day .day-label-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.rest-label{font-size:13px;color:var(--muted);font-style:italic}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)}
+.leg-dot{width:9px;height:9px;border-radius:50%}
+
+/* PROGRESS PAGE */
+.prog-view{display:none;padding:18px}
+.prog-view.active{display:block}
+.prog-section{margin-bottom:24px}
+.prog-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+.retest-block{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+.retest-title{font-size:13px;font-weight:500;margin-bottom:8px}
+.retest-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:28px;padding:10px 12px;outline:none;text-align:center}
+.retest-input::placeholder{color:var(--muted2)}
+.retest-save{margin-top:8px;width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:8px;cursor:pointer}
+.baseline-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px}
+.bar-track{background:var(--s2);border-radius:4px;height:8px;width:100%;overflow:hidden;margin-bottom:14px}
+.bar-fill{height:100%;border-radius:4px;background:var(--chest);transition:width 0.5s}
+
+.reset-btn{width:100%;background:transparent;border:1px solid var(--muted2);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:10px;cursor:pointer;margin-top:12px}
+
+/* SUPPLEMENTS */
+.supp-view{display:none;padding:0}
+.supp-view.active{display:block}
+.supp-header{padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.supp-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px;letter-spacing:0.06em}
+.supp-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1}
+.supp-streak-bar{display:flex;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.supp-streak-bar::-webkit-scrollbar{display:none}
+.streak-day{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.streak-dot{width:28px;height:28px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
+.streak-dot.full{background:#1a3a1a;border-color:#4caf7d;color:#4caf7d}
+.streak-dot.partial{background:#2a2a12;border-color:#f5c842;color:#f5c842}
+.streak-dot.today{border-color:var(--chest);border-width:2px}
+.streak-lbl{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted)}
+.supp-card{margin:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--s1);overflow:hidden;transition:all 0.2s}
+.supp-card.taken{background:#1a2a1a;border-color:#2d5a2d}
+.supp-top{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer}
+.supp-check{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--muted2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;cursor:pointer;flex-shrink:0}
+.supp-check.checked{background:#2d5a2d;border-color:#4caf7d}
+.supp-check svg{opacity:0;transition:opacity 0.2s}
+.supp-check.checked svg{opacity:1}
+.supp-icon{font-size:20px;flex-shrink:0}
+.supp-info{flex:1}
+.supp-name{font-size:14px;font-weight:500;line-height:1.2}
+.supp-when{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px}
+.supp-expand{color:var(--muted);font-size:14px;transition:transform 0.2s}
+.supp-expand.open{transform:rotate(180deg)}
+.supp-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.supp-body.open{display:block}
+.supp-why{font-size:13px;color:var(--muted);line-height:1.6;padding:12px 0 8px}
+.supp-dose{background:var(--s2);border-radius:6px;padding:10px 12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text)}
+.supp-dose span{color:var(--muted);display:block;font-size:10px;margin-bottom:2px}
+.all-done-banner{margin:12px;border-radius:10px;background:#1a3a1a;border:1px solid #2d5a2d;padding:16px;text-align:center;display:none}
+.all-done-banner.show{display:block}
+.all-done-text{font-family:'Bebas Neue',sans-serif;font-size:24px;color:#4caf7d;letter-spacing:1px}
+.all-done-sub{font-size:12px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace}
+.supp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 12px;border-top:1px solid var(--border)}
+.supp-stat{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.supp-stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent)}
+.supp-stat-lbl{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div>
+    <div class="nav-title">Ondrej's Plan</div>
+    <div class="nav-sub">10-week push-up programme</div>
+  </div>
+  <div class="nav-right">
+    <svg class="progress-ring" viewBox="0 0 44 44">
+      <circle cx="22" cy="22" r="18" fill="none" stroke="#1c1c1c" stroke-width="3"/>
+      <circle id="ring-fill" cx="22" cy="22" r="18" fill="none" stroke="#4a8fe8" stroke-width="3"
+        stroke-dasharray="113" stroke-dashoffset="113" stroke-linecap="round"
+        transform="rotate(-90 22 22)" style="transition:stroke-dashoffset 0.5s"/>
+      <text x="22" y="26" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#f0ede8" id="ring-text">0%</text>
+    </svg>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:var(--chest)"></div>Blue — chest</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--triceps)"></div>Red — triceps</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--shoulder)"></div>Green — shoulders</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--lats)"></div>Yellow — lats</div>
+  <div class="leg-item"><div class="leg-dot" style="background:var(--core)"></div>Purple — core</div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div id="week-views"></div>
+<div class="prog-view" id="prog-view">
+  <div class="prog-section">
+    <div class="prog-label">Overall progress</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="stat-done">0</div><div class="stat-lbl">days completed</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-total">70</div><div class="stat-lbl">total days</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-lbl">day streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-weeks">0</div><div class="stat-lbl">weeks done</div></div>
+    </div>
+  </div>
+  <div class="prog-section">
+    <div class="prog-label">Push-up progress</div>
+    <div class="retest-block">
+      <div class="retest-title">Baseline (Week 1)</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--chest)">27 reps</div>
+    </div>
+    <div class="retest-block">
+      <div class="retest-title">Week 4 retest</div>
+      <input class="retest-input" id="w4-input" type="number" placeholder="— reps" min="0" max="200">
+      <button class="retest-save" onclick="saveRetest('w4')">save</button>
+    </div>
+    <div class="retest-block">
+      <div class="retest-title">Week 10 final test</div>
+      <input class="retest-input" id="w10-input" type="number" placeholder="— reps" min="0" max="200">
+      <button class="retest-save" onclick="saveRetest('w10')">save</button>
+    </div>
+    <div class="prog-label" style="margin-top:16px">Progress to target (55–65 reps)</div>
+    <div class="baseline-bar"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">27 baseline</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)" id="current-reps-label">current: 27</span><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">60 target</span></div>
+    <div class="bar-track"><div class="bar-fill" id="progress-bar" style="width:0%"></div></div>
+  </div>
+  <button class="reset-btn" onclick="confirmReset()">reset all progress</button>
+</div>
+
+<div class="supp-view" id="supp-view">
+  <div class="supp-header">
+    <div class="supp-date" id="supp-date-label"></div>
+    <div class="supp-title">Daily Supplements</div>
+  </div>
+  <div class="supp-streak-bar" id="supp-streak-bar"></div>
+  <div id="all-done-banner" class="all-done-banner">
+    <div class="all-done-text">All taken today ✓</div>
+    <div class="all-done-sub">recovery and gains incoming</div>
+  </div>
+  <div id="supp-cards"></div>
+  <div class="supp-stats">
+    <div class="supp-stat"><div class="supp-stat-num" id="ss-today">0/5</div><div class="supp-stat-lbl">today</div></div>
+    <div class="supp-stat"><div class="supp-stat-num" id="ss-streak">0</div><div class="supp-stat-lbl">day streak</div></div>
+    <div class="supp-stat"><div class="supp-stat-num" id="ss-best">0</div><div class="supp-stat-lbl">best streak</div></div>
+  </div>
+</div>
+
+<script>
+const PLAN = [
+  {phase:'Phase 1 — Start',phaseColor:'#4a8fe8',title:'Learn the board',desc:'4 days/week · 3 sets of 8–10 · 60 sec rest · focus on form',days:[
+    {label:'Day 1',summary:'Chest — wide grip',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'3 × 8 · slow and controlled · full range · 60 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 20 sec · straight line head to heels'}
+    ]},
+    {label:'Day 2',summary:'Shoulders + core',exercises:[
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 8 · keep core tight · 60 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'3 × 8 each side · slow and deliberate'}
+    ]},
+    {label:'Day 3',rest:true},
+    {label:'Day 4',summary:'Chest + triceps',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'3 × 10 · add 2 reps if last session felt easy'},
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'2 × 8 · elbows close to body'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 25 sec'}
+    ]},
+    {label:'Day 5',summary:'Triceps + shoulders',exercises:[
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'2 × 8 · 60 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'2 × 8 · 60 sec rest'},
+      {muscle:'core',name:'Side plank',detail:'2 × 15 sec each side'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 1 — Start',phaseColor:'#4a8fe8',title:'Add volume',desc:'4 days/week · 3 sets of 10–12 · 45 sec rest',days:[
+    {label:'Day 1',summary:'Chest — wide + shoulder',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 30 sec'}
+    ]},
+    {label:'Day 2',summary:'Lats + core',exercises:[
+      {muscle:'lats',name:'Yellow grip push-ups',detail:'3 × 10 · squeeze at the top · 45 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'3 × 10 each side'}
+    ]},
+    {label:'Day 3',rest:true},
+    {label:'Day 4',summary:'Chest + triceps',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 30 sec'}
+    ]},
+    {label:'Day 5',summary:'Triceps + shoulders',exercises:[
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'core',name:'Side plank',detail:'3 × 20 sec each side'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 1 — Start',phaseColor:'#4a8fe8',title:'Push the reps',desc:'4 days/week · 4 sets of 12 · last set near failure',days:[
+    {label:'Day 1',summary:'Chest — push it',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'4 × 12 · last set to near failure · 45 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 40 sec'}
+    ]},
+    {label:'Day 2',summary:'Lats + shoulders',exercises:[
+      {muscle:'lats',name:'Yellow grip push-ups',detail:'3 × 12 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 finisher'},
+      {muscle:'core',name:'Dead bug',detail:'3 × 12 each side'}
+    ]},
+    {label:'Day 3',rest:true},
+    {label:'Day 4',summary:'Chest + shoulders',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'4 × 12 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 finisher · 45 sec rest'},
+      {muscle:'core',name:'Side plank',detail:'3 × 25 sec each side'}
+    ]},
+    {label:'Day 5',summary:'Triceps + shoulders',exercises:[
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'4 × 12 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 40 sec'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 2 — Acceleration',phaseColor:'#4caf7d',title:'Deload + retest',desc:'Recovery week · log your max rep test on Day 5',days:[
+    {label:'Day 1',summary:'Explosive — easy',exercises:[
+      {muscle:'chest',name:'Explosive wide push-ups',detail:'3 × 8 · fast push up, slow lower · recovery pace'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 30 sec'}
+    ]},
+    {label:'Day 2',summary:'Triceps + shoulders — easy',exercises:[
+      {muscle:'triceps',name:'Narrow grip push-ups',detail:'3 × 8 · easy · 60 sec rest'},
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 8 · 60 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'3 × 8 each side'}
+    ]},
+    {label:'Day 3',summary:'Lats — slow',exercises:[
+      {muscle:'lats',name:'Yellow grip push-ups',detail:'3 × 10 · slow and deliberate · 60 sec rest'},
+      {muscle:'core',name:'Side plank',detail:'2 × 20 sec each side'}
+    ]},
+    {label:'Day 4',rest:true},
+    {label:'Day 5',summary:'⚡ MAX REP TEST',exercises:[
+      {muscle:'chest',name:'Wide grip — to failure',detail:'ONE set · max reps · log the number in progress tab'},
+      {muscle:'core',name:'Plank — max hold',detail:'ONE hold · time it · log it'}
+    ]},
+    {label:'Day 6',summary:'Easy chest',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'3 × 10 · easy · no failure after test'},
+      {muscle:'core',name:'Plank hold',detail:'2 × 30 sec'}
+    ]},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 2 — Acceleration',phaseColor:'#4caf7d',title:'Superset week',desc:'5 days/week · supersets · 60 sec rest · intensity up',days:[
+    {label:'Day 1',summary:'Chest superset',exercises:[
+      {muscle:'chest',name:'Superset: wide + narrow',detail:'12 wide then straight into 10 narrow · no rest between · 60 sec after · 4 rounds'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 45 sec'}
+    ]},
+    {label:'Day 2',summary:'Triceps + shoulders',exercises:[
+      {muscle:'triceps',name:'Superset: narrow + green',detail:'12 narrow + 10 shoulder-width · no rest between · 60 sec after · 4 rounds'},
+      {muscle:'core',name:'Dead bug',detail:'3 × 12 each side'}
+    ]},
+    {label:'Day 3',summary:'Lats + legs',exercises:[
+      {muscle:'lats',name:'Yellow grip push-ups',detail:'4 × 12 · 45 sec rest'},
+      {muscle:'core',name:'Bicycle crunches',detail:'3 × 20 · slow and controlled'}
+    ]},
+    {label:'Day 4',rest:true},
+    {label:'Day 5',summary:'Chest — max volume',exercises:[
+      {muscle:'chest',name:'Wide grip push-ups',detail:'4 × 15 · last set near failure · log reps'},
+      {muscle:'core',name:'Side plank',detail:'3 × 30 sec each side'}
+    ]},
+    {label:'Day 6',summary:'Active recovery chest',exercises:[
+      {muscle:'chest',name:'Superset: wide + shoulder-width',detail:'12 wide + 10 shoulder · 3 rounds · 60 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'2 × 40 sec'}
+    ]},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 2 — Acceleration',phaseColor:'#4caf7d',title:'Pyramid sets',desc:'5 days/week · pyramid reps · 45 sec rest · 50+ reps per session',days:[
+    {label:'Day 1',summary:'Wide pyramid',exercises:[
+      {muscle:'chest',name:'Pyramid: wide grip',detail:'10 → 12 → 15 → 12 → 10 · 45 sec rest · explosive up, slow down'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 50 sec'}
+    ]},
+    {label:'Day 2',summary:'Triceps pyramid',exercises:[
+      {muscle:'triceps',name:'Pyramid: narrow grip',detail:'10 → 12 → 15 → 12 → 10 · 45 sec rest'},
+      {muscle:'shoulder',name:'Shoulder finisher',detail:'3 × 10 · 45 sec rest'},
+      {muscle:'core',name:'Bicycle crunches',detail:'3 × 20'}
+    ]},
+    {label:'Day 3',summary:'Lats + core focus',exercises:[
+      {muscle:'lats',name:'Yellow grip push-ups',detail:'4 × 12 · 45 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'4 × 12 each side'},
+      {muscle:'core',name:'Side plank',detail:'3 × 30 sec each side'}
+    ]},
+    {label:'Day 4',rest:true},
+    {label:'Day 5',summary:'Max effort chest',exercises:[
+      {muscle:'chest',name:'Wide grip — near failure',detail:'4 sets · stop 1 rep before failure · log every set'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 50 sec'}
+    ]},
+    {label:'Day 6',summary:'Wide pyramid — active recovery',exercises:[
+      {muscle:'chest',name:'Pyramid: wide grip',detail:'10 → 12 → 15 → 12 → 10 · 45 sec rest'},
+      {muscle:'core',name:'Bicycle crunches',detail:'3 × 20'}
+    ]},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 3 — Outbreak',phaseColor:'#e05c3a',title:'Max effort begins',desc:'5 days/week · near-failure sets · 30 sec rest · log everything',days:[
+    {label:'Day 1',summary:'Board intense — chest',exercises:[
+      {muscle:'chest',name:'Wide grip — near failure',detail:'4 sets · stop 1 rep before failure · 30 sec rest · log every set'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 60 sec'}
+    ]},
+    {label:'Day 2',summary:'Shoulders max',exercises:[
+      {muscle:'shoulder',name:'Shoulder-width — near failure',detail:'4 sets · 30 sec rest · log every set'},
+      {muscle:'core',name:'Dead bug',detail:'4 × 12 each side'}
+    ]},
+    {label:'Day 3',summary:'Lats + triceps superset',exercises:[
+      {muscle:'lats',name:'Superset: yellow + narrow',detail:'Yellow + narrow back to back · 4 rounds · 30 sec rest'},
+      {muscle:'core',name:'Bicycle crunches',detail:'4 × 20'}
+    ]},
+    {label:'Day 4',summary:'Board intense — beat Day 1',exercises:[
+      {muscle:'chest',name:'Wide grip — near failure',detail:'4 sets · try to beat Day 1 rep counts · 30 sec rest'},
+      {muscle:'core',name:'Side plank',detail:'3 × 40 sec each side'}
+    ]},
+    {label:'Day 5',summary:'Chest pyramid',exercises:[
+      {muscle:'chest',name:'Pyramid: wide grip',detail:'10 → 15 → 20 → 15 → 10 · 45 sec rest'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 60 sec'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 3 — Outbreak',phaseColor:'#e05c3a',title:'All grips, max volume',desc:'5 days/week · max volume · 30 sec rest · it should hurt',days:[
+    {label:'Day 1',summary:'Board intense — 5 sets',exercises:[
+      {muscle:'chest',name:'Wide grip — near failure',detail:'5 sets · 30 sec rest · by round 4 it should burn · log all'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 60 sec'}
+    ]},
+    {label:'Day 2',summary:'Shoulders — 5 sets',exercises:[
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'5 × 15 · 30 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'4 × 12 each side'}
+    ]},
+    {label:'Day 3',summary:'Lats + triceps alternating',exercises:[
+      {muscle:'lats',name:'Yellow + narrow alternating',detail:'5 sets · near failure each · 30 sec rest · log every set'},
+      {muscle:'core',name:'Bicycle crunches',detail:'4 × 20'}
+    ]},
+    {label:'Day 4',summary:'Board + squat superset',exercises:[
+      {muscle:'chest',name:'Wide grip — max effort',detail:'5 sets · max reps · add 3 × 15 squats between sets'},
+      {muscle:'core',name:'Side plank',detail:'3 × 45 sec each side'}
+    ]},
+    {label:'Day 5',summary:'Explosive chest',exercises:[
+      {muscle:'chest',name:'Explosive wide push-ups',detail:'4 × 12 · fast up, 3 sec down · active recovery'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 60 sec'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 3 — Outbreak',phaseColor:'#e05c3a',title:'Peak week',desc:'5 days/week · absolute max · write down every number',days:[
+    {label:'Day 1',summary:'Board intense — absolute max',exercises:[
+      {muscle:'chest',name:'Wide grip — absolute max',detail:'5 sets · stop only when form breaks · 30 sec rest · write every number'},
+      {muscle:'core',name:'Plank hold',detail:'3 × 60 sec'}
+    ]},
+    {label:'Day 2',summary:'Shoulders max + lunges',exercises:[
+      {muscle:'shoulder',name:'Shoulder-width — max',detail:'5 sets near failure · 30 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'4 × 12 each side'}
+    ]},
+    {label:'Day 3',summary:'Explosive superset',exercises:[
+      {muscle:'chest',name:'Explosive superset: wide + narrow',detail:'15 wide + 12 narrow · 5 rounds · 30 sec rest'},
+      {muscle:'core',name:'Bicycle crunches',detail:'4 × 20'}
+    ]},
+    {label:'Day 4',summary:'Lats + triceps max',exercises:[
+      {muscle:'lats',name:'Yellow near failure',detail:'5 sets · 30 sec rest · log every set'},
+      {muscle:'triceps',name:'Narrow near failure',detail:'5 sets · 30 sec rest · log every set'},
+      {muscle:'core',name:'Side plank',detail:'3 × 50 sec each side'}
+    ]},
+    {label:'Day 5',summary:'Chest deload before test',exercises:[
+      {muscle:'chest',name:'Wide grip — easy',detail:'3 × 15 · no failure · rest the chest before benchmark'},
+      {muscle:'core',name:'Plank hold',detail:'2 × 40 sec'}
+    ]},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]},
+  {phase:'Phase 3 — Outbreak',phaseColor:'#e05c3a',title:'Benchmark — how far?',desc:'Final retest week · log your score · compare to week 1',days:[
+    {label:'Day 1',summary:'⚡ FINAL MAX REP TEST',exercises:[
+      {muscle:'chest',name:'Wide grip — to absolute failure',detail:'ONE set · max reps · this is your final score · log in progress tab'},
+      {muscle:'core',name:'Plank — max hold',detail:'ONE hold · time it · compare to week 4'}
+    ]},
+    {label:'Day 2',summary:'Shoulders — easy',exercises:[
+      {muscle:'shoulder',name:'Shoulder-width push-ups',detail:'3 × 10 · easy recovery · 60 sec rest'},
+      {muscle:'core',name:'Dead bug',detail:'2 × 10 each side'}
+    ]},
+    {label:'Day 3',rest:true},
+    {label:'Day 4',summary:'Celebration — all grips',exercises:[
+      {muscle:'chest',name:'Wide grip',detail:'3 × 10 · enjoy the strength'},
+      {muscle:'triceps',name:'Narrow grip',detail:'3 × 10'},
+      {muscle:'shoulder',name:'Shoulder-width',detail:'3 × 10'},
+      {muscle:'lats',name:'Yellow grip',detail:'3 × 10'},
+      {muscle:'core',name:'Plank hold',detail:'1 × max'}
+    ]},
+    {label:'Day 5',rest:true},
+    {label:'Day 6',rest:true},
+    {label:'Day 7',rest:true}
+  ]}
+];
+
+const MUSCLE_COLORS = {chest:'#4a8fe8',triceps:'#e05c3a',shoulder:'#4caf7d',lats:'#f5c842',core:'#b06ef3'};
+
+function getKey(w,d){return `w${w}_d${d}`}
+function getNoteKey(w,d){return `note_w${w}_d${d}`}
+function getRetestKey(k){return `retest_${k}`}
+
+function loadChecked(w,d){return localStorage.getItem(getKey(w,d))==='1'}
+function saveChecked(w,d,v){localStorage.setItem(getKey(w,d),v?'1':'0')}
+function loadNote(w,d){return localStorage.getItem(getNoteKey(w,d))||''}
+function saveNote(w,d,v){localStorage.setItem(getNoteKey(w,d),v)}
+function loadRetest(k){return localStorage.getItem(getRetestKey(k))||''}
+function saveRetestVal(k,v){localStorage.setItem(getRetestKey(k),v)}
+
+function buildUI(){
+  const tabsEl=document.getElementById('tabs');
+  const viewsEl=document.getElementById('week-views');
+
+  PLAN.forEach((week,wi)=>{
+    const tab=document.createElement('div');
+    tab.className='tab';
+    tab.id=`tab-${wi}`;
+    tab.textContent=`W${wi+1}`;
+    tab.onclick=()=>switchTab(wi);
+    tabsEl.appendChild(tab);
+
+    const view=document.createElement('div');
+    view.className='week-view';
+    view.id=`view-${wi}`;
+
+    let html=`<div class="week-header-bar">
+      <div class="week-phase" style="color:${week.phaseColor}">${week.phase}</div>
+      <div class="week-title">Week ${wi+1} — ${week.title}</div>
+      <div class="week-desc">${week.desc}</div>
+    </div>`;
+
+    week.days.forEach((day,di)=>{
+      if(day.rest){
+        html+=`<div class="rest-day"><span class="day-label-text">${day.label}</span><span class="rest-label">Rest — recover and grow</span></div>`;
+        return;
+      }
+      const checked=loadChecked(wi,di);
+      const note=loadNote(wi,di);
+      const cardId=`card-${wi}-${di}`;
+      const checkId=`check-${wi}-${di}`;
+      const bodyId=`body-${wi}-${di}`;
+      const noteId=`note-${wi}-${di}`;
+      const flashId=`flash-${wi}-${di}`;
+      const expandId=`expand-${wi}-${di}`;
+
+      let exHtml='';
+      day.exercises.forEach(ex=>{
+        exHtml+=`<div class="ex-row">
+          <div class="muscle-dot" style="background:${MUSCLE_COLORS[ex.muscle]}"></div>
+          <div class="ex-info">
+            <div class="ex-name">${ex.name}</div>
+            <div class="ex-detail">${ex.detail}</div>
+          </div>
+        </div>`;
+      });
+
+      html+=`<div class="day-card${checked?' completed':''}" id="${cardId}">
+        <div class="day-top" onclick="toggleBody(${wi},${di})">
+          <div class="day-check${checked?' checked':''}" id="${checkId}" onclick="event.stopPropagation();toggleCheck(${wi},${di})">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7L5.5 10L11.5 4" stroke="#4caf7d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="day-label-text">${day.label}</div>
+          <div class="day-summary">${day.summary}</div>
+          <div class="day-expand" id="${expandId}">▾</div>
+        </div>
+        <div class="day-body" id="${bodyId}">
+          <div class="exercises">${exHtml}</div>
+          <div class="notes-label">Notes & reps</div>
+          <textarea class="notes-area" id="${noteId}" placeholder="e.g. 4 rounds: 14 / 12 / 11 / 10 · felt strong today">${note}</textarea>
+          <button class="save-btn" onclick="doSaveNote(${wi},${di})">save note</button>
+          <div class="saved-flash" id="${flashId}">saved ✓</div>
+        </div>
+      </div>`;
+    });
+
+    view.innerHTML=html;
+    viewsEl.appendChild(view);
+  });
+
+  const suppTab=document.createElement('div');
+  suppTab.className='tab';
+  suppTab.id='tab-supp';
+  suppTab.textContent='Supps';
+  suppTab.onclick=()=>switchTab('supp');
+  tabsEl.appendChild(suppTab);
+
+  const progTab=document.createElement('div');
+  progTab.className='tab';
+  progTab.id='tab-prog';
+  progTab.textContent='Progress';
+  progTab.onclick=()=>switchTab('prog');
+  tabsEl.appendChild(progTab);
+
+  const w4v=loadRetest('w4');
+  const w10v=loadRetest('w10');
+  if(w4v)document.getElementById('w4-input').value=w4v;
+  if(w10v)document.getElementById('w10-input').value=w10v;
+
+  switchTab(0);
+  updateRing();
+}
+
+function switchTab(idx){
+  document.querySelectorAll('.week-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('prog-view').classList.remove('active');
+
+  if(idx==='supp'){
+    document.getElementById('supp-view').classList.add('active');
+    document.getElementById('tab-supp').classList.add('active');
+    buildSuppView();
+  } else if(idx==='prog'){
+    document.getElementById('prog-view').classList.add('active');
+    document.getElementById('tab-prog').classList.add('active');
+    updateStats();
+  } else {
+    document.getElementById(`view-${idx}`).classList.add('active');
+    document.getElementById(`tab-${idx}`).classList.add('active');
+  }
+}
+
+function toggleBody(wi,di){
+  const body=document.getElementById(`body-${wi}-${di}`);
+  const expand=document.getElementById(`expand-${wi}-${di}`);
+  const open=body.classList.toggle('open');
+  expand.classList.toggle('open',open);
+}
+
+function toggleCheck(wi,di){
+  const checked=!loadChecked(wi,di);
+  saveChecked(wi,di,checked);
+  const card=document.getElementById(`card-${wi}-${di}`);
+  const check=document.getElementById(`check-${wi}-${di}`);
+  card.classList.toggle('completed',checked);
+  check.classList.toggle('checked',checked);
+  updateRing();
+  updateTabDone(wi);
+}
+
+function doSaveNote(wi,di){
+  const val=document.getElementById(`note-${wi}-${di}`).value;
+  saveNote(wi,di,val);
+  const flash=document.getElementById(`flash-${wi}-${di}`);
+  flash.classList.add('show');
+  setTimeout(()=>flash.classList.remove('show'),1800);
+}
+
+function saveRetest(k){
+  const val=document.getElementById(`${k}-input`).value;
+  saveRetestVal(k,val);
+  updateStats();
+}
+
+function countSessionDays(){
+  return PLAN.reduce((t,w)=>t+w.days.filter(d=>!d.rest).length,0);
+}
+
+function countDone(){
+  let done=0;
+  PLAN.forEach((week,wi)=>{
+    week.days.forEach((day,di)=>{
+      if(!day.rest&&loadChecked(wi,di))done++;
+    });
+  });
+  return done;
+}
+
+function updateRing(){
+  const total=countSessionDays();
+  const done=countDone();
+  const pct=Math.round((done/total)*100);
+  const circ=113;
+  document.getElementById('ring-fill').style.strokeDashoffset=circ-(circ*pct/100);
+  document.getElementById('ring-text').textContent=pct+'%';
+}
+
+function updateTabDone(wi){
+  const week=PLAN[wi];
+  const sessionDays=week.days.filter(d=>!d.rest);
+  const allDone=sessionDays.every((_,di)=>{
+    const realDi=week.days.indexOf(sessionDays[di]);
+    return loadChecked(wi,realDi);
+  });
+  document.getElementById(`tab-${wi}`).classList.toggle('done-tab',allDone);
+}
+
+function updateStats(){
+  const done=countDone();
+  const total=countSessionDays();
+  document.getElementById('stat-done').textContent=done;
+  document.getElementById('stat-total').textContent=total;
+
+  let weeks=0;
+  PLAN.forEach((week,wi)=>{
+    const sess=week.days.filter(d=>!d.rest);
+    if(sess.every((_,di)=>loadChecked(wi,week.days.indexOf(sess[di]))))weeks++;
+  });
+  document.getElementById('stat-weeks').textContent=weeks;
+
+  const w4v=loadRetest('w4')||'';
+  const w10v=loadRetest('w10')||'';
+  if(w4v)document.getElementById('w4-input').value=w4v;
+  if(w10v)document.getElementById('w10-input').value=w10v;
+
+  const current=parseInt(w10v||w4v||'27');
+  document.getElementById('current-reps-label').textContent=`current: ${current}`;
+  const pct=Math.max(0,Math.min(100,Math.round(((current-27)/(60-27))*100)));
+  document.getElementById('progress-bar').style.width=pct+'%';
+
+  document.getElementById('stat-streak').textContent=done>0?done:'0';
+}
+
+function confirmReset(){
+  if(confirm('Reset all progress? This cannot be undone.')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+const SUPPS=[
+  {id:'protein',icon:'💪',name:'Protein',dose:'25–30g per serving',when:'Within 30 min after training, or with breakfast on rest days',why:'You\'re building muscle with daily training but probably under-eating protein on chef shifts. Target 1.6–2g per kg bodyweight. At ~80kg that\'s 128–160g/day — hard to hit from food alone on a tight schedule.'},
+  {id:'creatine',icon:'⚡',name:'Creatine',dose:'5g daily — any time, consistency matters more than timing',when:'Morning with breakfast — just pick a time and stick to it',why:'One of the most researched supplements in existence. Increases phosphocreatine stores so you can push more reps, recover faster between sets. Takes 2–4 weeks to saturate — take it every day even on rest days.'},
+  {id:'omega3',icon:'🐟',name:'Omega 3',dose:'2–3g EPA+DHA per day (check the label, not just fish oil mg)',when:'With a meal — fat-soluble, absorbs better with food',why:'Reduces training inflammation, supports joint health, brain function, and mood. In England your diet probably lacks oily fish. Especially useful when you\'re training hard and working intense shifts.'},
+  {id:'d3k2',icon:'☀️',name:'Vitamin D3 + K2',dose:'2000–4000 IU D3 daily with 100mcg K2',when:'Morning with breakfast — fat-soluble, needs food',why:'You\'re in Bosham, England. You are deficient. This isn\'t a maybe. D3 supports testosterone, immune function, mood, and bone density. K2 directs calcium into bones not arteries — they work together, don\'t take D3 without K2.'},
+  {id:'magnesium',icon:'🌙',name:'Magnesium',dose:'300–400mg magnesium glycinate or bisglycinate',when:'30–60 min before bed — improves sleep quality',why:'Most people are low. Magnesium regulates muscle recovery, reduces cortisol, and significantly improves sleep quality. The glycinate form is gentler on the stomach than oxide. Given your training load and shift work, this one earns its place.'}
+];
+
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function suppKey(id){return `supp_${id}_${todayKey()}`}
+function suppDayKey(dateStr,id){return `supp_${id}_${dateStr}`}
+function isSuppTaken(id){return localStorage.getItem(suppKey(id))==='1'}
+function setSuppTaken(id,v){localStorage.setItem(suppKey(id),v?'1':'0')}
+
+function getDayStr(daysAgo){
+  const d=new Date();
+  d.setDate(d.getDate()-daysAgo);
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function getDayAllCount(dateStr){
+  return SUPPS.filter(s=>localStorage.getItem(suppDayKey(dateStr,s.id))==='1').length;
+}
+
+function calcSuppStreak(){
+  let streak=0;
+  for(let i=1;i<=60;i++){
+    const ds=getDayStr(i);
+    if(getDayAllCount(ds)===SUPPS.length)streak++;
+    else break;
+  }
+  return streak;
+}
+
+function calcBestStreak(){
+  let best=0,cur=0;
+  for(let i=60;i>=0;i--){
+    const ds=getDayStr(i);
+    if(getDayAllCount(ds)===SUPPS.length){cur++;if(cur>best)best=cur;}
+    else cur=0;
+  }
+  return best;
+}
+
+function buildSuppView(){
+  const today=new Date();
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('supp-date-label').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+
+  // Streak bar — last 14 days
+  const bar=document.getElementById('supp-streak-bar');
+  bar.innerHTML='';
+  for(let i=13;i>=0;i--){
+    const ds=getDayStr(i);
+    const count=getDayAllCount(ds);
+    const d=new Date();d.setDate(d.getDate()-i);
+    const label=i===0?'today':days[d.getDay()];
+    let cls='streak-dot';
+    if(count===SUPPS.length)cls+=' full';
+    else if(count>0)cls+=' partial';
+    if(i===0)cls+=' today';
+    bar.innerHTML+=`<div class="streak-day"><div class="${cls}">${count===SUPPS.length?'✓':count||''}</div><div class="streak-lbl">${label}</div></div>`;
+  }
+
+  // Cards
+  const cards=document.getElementById('supp-cards');
+  cards.innerHTML='';
+  SUPPS.forEach(s=>{
+    const taken=isSuppTaken(s.id);
+    cards.innerHTML+=`<div class="supp-card${taken?' taken':''}" id="sc-${s.id}">
+      <div class="supp-top" onclick="toggleSuppBody('${s.id}')">
+        <div class="supp-check${taken?' checked':''}" id="sch-${s.id}" onclick="event.stopPropagation();toggleSupp('${s.id}')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="#4caf7d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="supp-icon">${s.icon}</div>
+        <div class="supp-info">
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-when">${s.when}</div>
+        </div>
+        <div class="supp-expand" id="sexp-${s.id}">▾</div>
+      </div>
+      <div class="supp-body" id="sbody-${s.id}">
+        <div class="supp-why">${s.why}</div>
+        <div class="supp-dose"><span>dose</span>${s.dose}</div>
+      </div>
+    </div>`;
+  });
+
+  updateSuppStats();
+}
+
+function toggleSupp(id){
+  const taken=!isSuppTaken(id);
+  setSuppTaken(id,taken);
+  document.getElementById(`sc-${id}`).classList.toggle('taken',taken);
+  document.getElementById(`sch-${id}`).classList.toggle('checked',taken);
+  updateSuppStats();
+}
+
+function toggleSuppBody(id){
+  const body=document.getElementById(`sbody-${id}`);
+  const exp=document.getElementById(`sexp-${id}`);
+  const open=body.classList.toggle('open');
+  exp.classList.toggle('open',open);
+}
+
+function updateSuppStats(){
+  const takenToday=SUPPS.filter(s=>isSuppTaken(s.id)).length;
+  const streak=calcSuppStreak();
+  const best=calcBestStreak();
+  document.getElementById('ss-today').textContent=`${takenToday}/${SUPPS.length}`;
+  document.getElementById('ss-streak').textContent=streak;
+  document.getElementById('ss-best').textContent=best;
+  const banner=document.getElementById('all-done-banner');
+  banner.classList.toggle('show',takenToday===SUPPS.length);
+  // refresh streak bar dots for today
+  const todayDot=document.querySelector('.streak-dot.today');
+  if(todayDot){
+    todayDot.textContent=takenToday===SUPPS.length?'✓':takenToday||'';
+    todayDot.classList.toggle('full',takenToday===SUPPS.length);
+    todayDot.classList.toggle('partial',takenToday>0&&takenToday<SUPPS.length);
+  }
+}
+
+buildUI();
+</script>
+</body>
+</html>
