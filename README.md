@@ -1,2 +1,3 @@
-# ondrej-plan
-Personal push up plan for 10 weeks 
+# ENOM Kettlebell 
+Personal workout for 8 weeks 
+
